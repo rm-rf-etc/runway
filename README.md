@@ -37,7 +37,8 @@ main.js
 ```js
 require('./routes.js')
 var router = require('runway')
-var Server = require('http').createServer(router.listener)
+var server = require('http').createServer(router.listener)
+server.listen(8080)
 ```
 
 
