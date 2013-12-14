@@ -8,7 +8,9 @@ Stupidly simple, performance-oriented router module for node.js apps.
 
 ## Usage
 
+routes.js
 ```js
+var router = require('runway')
 var controllers = require('YourControllerFunctions')
 
 router
@@ -21,6 +23,7 @@ router
 .endgroup
 ( 'more/', controllers.whatever )
 
+
 function isMobile(d, save){
     if (/mobile/g.test(d.req['user-agent']))
         save({controller: controllers.mobile})
@@ -28,6 +31,13 @@ function isMobile(d, save){
 function hasAuth(d, save){
     // auth logic goes here...
 }
+```
+
+main.js
+```js
+require('./routes.js')
+var router = require('runway')
+var Server = require('http').createServer(router.listener)
 ```
 
 
