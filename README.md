@@ -12,11 +12,11 @@ Stupidly simple, performance-oriented router module for node.js apps.
 var controllers = require('YourControllerFunctions')
 
 router
-( '/',                  controllers.index )
-( 'home/',              controllers.home  )
-( 'home/users/{int}/',  controllers.users )
-.group( 'api/update/',   [isMobile, hasAuth] )
-    ( '/users/{a-z}/',      controllers.api.users  )
+( '/', controllers.index )
+( 'home/', controllers.home  )
+( 'home/users/{int}/', controllers.users )
+.group( 'api/update/', [isMobile, hasAuth] )
+    ( '/users/{a-z}/', controllers.api.users  )
     ( '/admins/name-{any}/' controllers.api.admins )
 .endgroup
 ( 'more/', controllers.whatever )
