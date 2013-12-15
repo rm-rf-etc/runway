@@ -5,8 +5,34 @@ Stupidly simple, performance-oriented router module for node.js apps.
 
 `npm install runway`
 
+version: 0.0.1-beta
 
 ## Usage
+
+This is currently in beta, so certain features are not yet working. Route filters (as shown in the usage example)
+don't currently work. Capturing the arguments from the URL and passing them to the controller is not implemented
+either, but you can easily pull them out by parsing req.url using a regex. Refer to the toRegExp() method to see
+the patterns which correspond to the URL wildcard patterns, {any}, {num}, {int}, {a-z}. An example URL like this:  
+`home-{a-z}/users/{any}/associate/{num}/like/{int}`  
+would translate to a pattern like this:  
+`new RegExp('home-([a-zA-Z]+)/users/([0-9a-zA-Z-_]+)/associate/([0-9]+)/like/([0-9]|[1-9][0-9]*)')`
+
+You would then use RegExp.exec() to get an array containing your values. Here is a quick paste of this done
+in the node.js REPL:
+```
+> var thing = new RegExp('home-([a-zA-Z]+)/users/([0-9a-zA-Z-_]+)/associate/([0-9]+)/like/([0-9]|[1-9][0-9]*)')
+undefined
+> thing.exec('home-asdfg/users/098asdf/associate/00345/like/12345')
+[ 'home-asdfg/users/098asdf/associate/00345/like/1',
+  'asdfg',
+  '098asdf',
+  '00345',
+  '1',
+  index: 0,
+  input: 'home-asdfg/users/098asdf/associate/00345/like/12345' ]
+```
+
+### Usage Example:
 
 routes.js
 ```js
