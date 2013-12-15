@@ -6,7 +6,7 @@ var routes_tree = Object.create(null)
 // Replace predefined keys in a given string, with associated regular expression.
 function toRegExp(string){
     var replacements = [
-            {a: /\{int\}/g, b: '([0-9]|[1-9][0-9]*)'},
+            {a: /\{int\}/g, b: '[1-9][0-9]*'},
             {a: /\{any\}/g, b: '[0-9a-zA-Z-_]+'},
             {a: /\{a-z\}/g, b: '[a-zA-Z]+'},
             {a: /\{num\}/g, b: '[0-9]+'}

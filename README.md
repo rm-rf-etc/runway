@@ -5,7 +5,7 @@ Stupidly simple, performance-oriented router module for node.js apps.
 
 `npm install runway`
 
-version: 0.0.1-beta
+version: 0.0.11-beta
 
 ## Usage
 
@@ -20,16 +20,17 @@ would translate to a pattern like this:
 You would then use RegExp.exec() to get an array containing your values. Here is a quick paste of this done
 in the node.js REPL:
 ```
-> var thing = new RegExp('home-([a-zA-Z]+)/users/([0-9a-zA-Z-_]+)/associate/([0-9]+)/like/([0-9]|[1-9][0-9]*)')
+> var thing = new RegExp('home-([a-zA-Z]+)/users/([0-9a-zA-Z-_]+)/associate/([0-9]+)/like/([1-9][0-9]*)')
 undefined
 > thing.exec('home-asdfg/users/098asdf/associate/00345/like/12345')
-[ 'home-asdfg/users/098asdf/associate/00345/like/1',
+[ 'home-asdfg/users/098asdf/associate/00345/like/12345',
   'asdfg',
   '098asdf',
   '00345',
-  '1',
+  '12345',
   index: 0,
   input: 'home-asdfg/users/098asdf/associate/00345/like/12345' ]
+> 
 ```
 
 ### Usage Example:
