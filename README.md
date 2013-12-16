@@ -15,7 +15,7 @@ either, but you can easily pull them out by parsing req.url using a regex. Refer
 the patterns which correspond to the URL wildcard patterns, {any}, {num}, {int}, {a-z}. An example URL like this:  
 `home-{a-z}/users/{any}/associate/{num}/like/{int}`  
 would translate to a pattern like this:  
-`new RegExp('home-([a-zA-Z]+)/users/([0-9a-zA-Z-_]+)/associate/([0-9]+)/like/([0-9]|[1-9][0-9]*)')`
+`new RegExp('home-([a-zA-Z]+)/users/([0-9a-zA-Z-_]+)/associate/([0-9]+)/like/([1-9][0-9]*)')`
 
 You would then use RegExp.exec() to get an array containing your values. Here is a quick paste of this done
 in the node.js REPL:
