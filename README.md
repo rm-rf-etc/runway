@@ -5,15 +5,16 @@ Stupidly simple, performance-oriented router module for node.js apps.
 
 `npm install runway`
 
-version: 0.0.2-beta
+version: 0.0.21-beta
 
-## Usage
+### Intro...
 
-Runway is currently in beta. Please consider contributing if you like what has been done so far.
+Runway is currently in beta. Please consider contributing or staring this repo on npm
+if you like what has been done so far.
 
+Tryout `node examples/basic.js` and then browse to `localhost:8080/`.
 Try running `node test/test.js` to see routes working and with working route filters.  
 Try running `node test/perf.js` to run the performance tests.  
-Tryout `node examples/basic.js` and then browse to `localhost:8080/`.
 
 latest test stats:
 ```
@@ -21,33 +22,47 @@ with internal redirect x 122,570 ops/sec ±0.74% (96 runs sampled)
 without internal redirect x 126,179 ops/sec ±1.02% (87 runs sampled)
 ```
 
-### Usage Example:
+## Usage Example:
 
 routes.js
 ```js
 var router = require('runway')
-var controllers = require('YourControllerFunctions')
 
-router
-( '/', controllers.index )
-( 'home/', controllers.home  )
-( 'home/users/{int}/', controllers.users )
-.group( 'api/update/', [isMobile, hasAuth] ) // route filters
-    ( '/users/{a-z}/', controllers.api.users  )
-    ( '/admins/name-{any}/' controllers.api.admins )
-.endgroup
-( 'more/', controllers.whatever )
+// Controllers
+var controllers = {
+    index:function(req, res, args){
+        res.end('index')
+    },
+    home:function(req, res, args){
+        res.end('home')
+    },
+    users:function(req, res, args){
+        res.end('users')
+    }
+}
 
-
+// Filters
 function isMobile(req, res, args, ops, next){
     if (/mobile/g.test(req['user-agent']))
-        ops.i_redirect(controllers.mobile)
-    next()
+        ops.i_redirect(controllers.index)
+    else
+        next()
 }
 function hasAuth(req, res, args, ops, next){
     // auth logic goes here...
     next()
 }
+
+// Routes
+router
+( '/', controllers.index )
+( 'home/', controllers.home  )
+( 'home/users/{int}/', controllers.users )
+.group( 'api/update/', [isMobile, hasAuth] ) // route filters
+    ( '/users/{a-z}/', function(){} )
+    ( '/admins/name-{any}/', function(){} )
+.endgroup
+( 'more/', function(){} )
 ```
 
 main.js
@@ -72,8 +87,7 @@ path and/or shared controller and route filters. Use router.config({fail:yourFun
 to override the default failure handler. Provide router.listener as the callback to
 the standard node.js httpServer request event and you're good to go.
 
-
-#### How it works:
+## How it works:
 Runway creates a nested object out of each route, representing a single branch of the
 tree. It then merges that branch object into the tree object, which automatically
 combines matching paths, including path segments which have matching regular
@@ -90,7 +104,7 @@ controller, while redirect() sends an actual 302 response with whatever destinat
 you provide.
 
 
-### Future To-Do's:
+## Future To-Do's:
 
 * Develop and test FSM implementation over native RegExp.
 * Provide HTTP method-specific routing.
@@ -105,3 +119,26 @@ $ npm install
 $ npm install benchmark
 $ node test/test.js
 ```
+
+## License
+
+The MIT License (MIT)
+
+Copyright (c) 2013 Rob Christian
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
