@@ -5,7 +5,7 @@ Stupidly simple, performance-oriented router module for node.js apps.
 
 `npm install runway`
 
-version: 0.0.22-beta
+version: 0.0.23-beta
 
 ### Intro...
 
@@ -21,6 +21,9 @@ latest test stats:
 with internal redirect x 122,570 ops/sec ±0.74% (96 runs sampled)
 without internal redirect x 126,179 ops/sec ±1.02% (87 runs sampled)
 ```
+
+Runway is built upon lodash-node, the best performance-oriented utility library available.
+JsPerf.com is the first place of reference for runtime performance design considerations.
 
 ## Usage Example:
 
@@ -87,10 +90,11 @@ The syntax is designed to be simplistic, uncluttered, and feature-rich.
 
 ## Features
 Route to any standard request event listener (any function which receives request
-and response objects, as per standard node.js convention). Group routes upon a base
-path and/or shared controller and route filters. Use router.config({fail:yourFunc})
-to override the default failure handler. Provide router.listener as the callback to
-the standard node.js httpServer request event and you're good to go.
+and response objects, as per standard node.js convention). Group routes upon a common
+base path and optionally, shared controller and/or route filters. Use
+router.config({fail:yourFunc}) to override the default 404 handler. Provide
+router.listener as the callback to the standard node.js httpServer request event
+and you're good to go.
 
 ## How it works:
 Runway creates a nested object out of each route, representing a single branch of the
