@@ -3,16 +3,15 @@ var router = require('../runway')
 /**
  * Controllers
  */
-var controllers = {
-    index:function(req, res, args){
-        res.end('index')
-    },
-    home:function(req, res, args){
-        res.end('home')
-    },
-    users:function(req, res, args){
-        res.end('users')
-    }
+var controllers = {}
+controllers.index = function(req, res, args){
+    res.end('index')
+}
+controllers.home = function(req, res, args){
+    res.end('home')
+}
+controllers.users = function(req, res, args){
+    res.end('users')
 }
 /**
  * Filters
@@ -34,9 +33,11 @@ router
 ( '/', controllers.index )
 ( 'home/', controllers.home  )
 ( 'home/users/{int}/', controllers.users )
-.group( 'api/update/', [isMobile, hasAuth] ) // route filters
-    ( '/users/{a-z}/', function(){} )
+.group( '/api/update/', [isMobile, hasAuth] ) // route filters
     ( '/admins/name-{any}/', function(){} )
+    ( '/users/{a-z}/', function(req,res,args){
+        res.end(args[0])
+    })
 .endgroup
-( 'more/', function(){} )
+( 'more/', function(req,res){ res.end('more') } )
 

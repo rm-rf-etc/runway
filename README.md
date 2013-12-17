@@ -5,7 +5,7 @@ Stupidly simple, performance-oriented router module for node.js apps.
 
 `npm install runway`
 
-version: 0.0.21-beta
+version: 0.0.22-beta
 
 ### Intro...
 
@@ -26,22 +26,24 @@ without internal redirect x 126,179 ops/sec ±1.02% (87 runs sampled)
 
 routes.js
 ```js
-var router = require('runway')
+var router = require('../runway')
 
-// Controllers
-var controllers = {
-    index:function(req, res, args){
-        res.end('index')
-    },
-    home:function(req, res, args){
-        res.end('home')
-    },
-    users:function(req, res, args){
-        res.end('users')
-    }
+/**
+ * Controllers
+ */
+var controllers = {}
+controllers.index = function(req, res, args){
+    res.end('index')
 }
-
-// Filters
+controllers.home = function(req, res, args){
+    res.end('home')
+}
+controllers.users = function(req, res, args){
+    res.end('users')
+}
+/**
+ * Filters
+ */
 function isMobile(req, res, args, ops, next){
     if (/mobile/g.test(req['user-agent']))
         ops.i_redirect(controllers.index)
@@ -52,17 +54,20 @@ function hasAuth(req, res, args, ops, next){
     // auth logic goes here...
     next()
 }
-
-// Routes
+/**
+ * Routes
+ */
 router
 ( '/', controllers.index )
 ( 'home/', controllers.home  )
 ( 'home/users/{int}/', controllers.users )
-.group( 'api/update/', [isMobile, hasAuth] ) // route filters
-    ( '/users/{a-z}/', function(){} )
+.group( '/api/update/', [isMobile, hasAuth] ) // route filters
     ( '/admins/name-{any}/', function(){} )
+    ( '/users/{a-z}/', function(req,res,args){
+        res.end(args[0])
+    })
 .endgroup
-( 'more/', function(){} )
+( 'more/', function(req,res){ res.end('more') } )
 ```
 
 main.js
