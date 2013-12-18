@@ -5,7 +5,7 @@ Stupidly simple, performance-oriented router module for node.js apps.
 
 `npm install runway`
 
-version: 0.0.23-beta
+version: 0.0.24-beta
 
 ### Intro...
 
