@@ -19,8 +19,7 @@ controllers.users = function(req, res, args){
 function isMobile(req, res, args, ops, next){
     if (/mobile/g.test(req['user-agent']))
         ops.i_redirect(controllers.index)
-    else
-        next()
+    next()
 }
 function hasAuth(req, res, args, ops, next){
     // auth logic goes here...
