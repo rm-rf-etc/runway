@@ -9,7 +9,8 @@ Stupidly simple, performance-oriented router module for node.js apps.
 Runway is currently in beta. Please consider contributing or staring this repo on npm
 if you like what has been done so far.
 
-To see the examples, clone it from [github](http://github.com/rm-rf-etc/runway), and then
+To see the examples, clone it from [github](http://github.com/rm-rf-etc/runway), and then  
+
 * tryout `node examples/basic.js` and then browse to `localhost:8080/`.  
 * find additional tests in `node test/test.js`.  
 * try running `node test/perf.js` to run the performance tests.  
@@ -92,7 +93,7 @@ var server = require('http').createServer(router.listener)
 server.listen(8080)
 ```
 
-### Extension API
+### Configuration API
 You can add your own wildcard expressions:
 ```js
 // The properties 'tag' and 'exp' must both be strings. Exp must contain
@@ -158,15 +159,7 @@ features, such as i_redirect() and redirect(). i_redirect() allows you to change
 controller, while redirect() sends an actual 302 response with whatever destination
 you provide.
 
-
-## Future To-Do's:
-
-* Develop and test FSM implementation over native RegExp.
-* Provide HTTP method-specific routing.
-
-
 ## How To Run The Tests
-
 ```
 $ git clone http://github.com/rm-rf-etc/runway.git
 $ cd runway
@@ -176,7 +169,6 @@ $ node test/test.js
 ```
 
 ## License
-
 The MIT License (MIT)
 
 Copyright (c) 2013 Rob Christian
