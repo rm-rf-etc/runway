@@ -1,50 +1,20 @@
 
 var _ = require('lodash-node')
+
 var routes_tree = Object.create(null)
 
-
-// Replace predefined keys in a given string, with associated regular expression.
-function toRegExp(string){
-    var replacements = [
-            {a: /\{int\}/g, b: '([1-9][0-9]*)'},
-            {a: /\{any\}/g, b: '([0-9a-zA-Z-_]+)'},
-            {a: /\{a-z\}/g, b: '([a-zA-Z]+)'},
-            {a: /\{num\}/g, b: '([0-9]+)'}
-        ]
-    for (var i=0; i < replacements.length; i++)
-        string = string.replace(replacements[i].a, replacements[i].b)
-        
-    return new RegExp(string)
-}
-// A branch is a series of nested objects.
-function newBranch(array, fn){
-    return _.reduce(array.reverse(), function(cumulate, segment){
-        var x = Object.create(null)
-        if (/\{...\}/g.test(segment)) {
-            var re = toRegExp(segment)
-            x['{regex}'] = [re]
-            x[re.toString()] = cumulate
-            return x
-        } else {
-            x[segment] = cumulate
-            return x
-        }
-    }, fn)
-}
+var wildcards = [
+    { tag: '{int}', exp: '([1-9][0-9]*)'    },
+    { tag: '{any}', exp: '([0-9a-zA-Z-_]+)' },
+    { tag: '{a-z}', exp: '([a-zA-Z]+)'      },
+    { tag: '{num}', exp: '([0-9]+)'         }
+]
 
 
 
-// Default failure handler (when no matching route is found). Use config() to override.
-function fail(req, res){
-    res.end('404')
-}
-router.config = function(options){
-    if (options && options.fail)
-        fail = options.fail
-}
 /**
  * Although possibly confusing to read, this minimalist set of nested closures
- * is the entire router API (aside from router.config()).
+ * is the entire API for adding defining your routes (aside from router.config()).
  */
 function router(first_route, c, f){
 
@@ -78,12 +48,6 @@ function router(first_route, c, f){
         return add
     }
 
-    // router.get = function(){}
-    // router.put = function(){}
-    // router.post = function(){}
-    // router.delete = function(){}
-    // ^ coming soon...
-
     add.group = function(base_url, c, f){
         if (!f) f = (_.isArray(c)) ? c : []
         base_url = base_url.replace(/(^\/|\/$)/g,'')
@@ -106,16 +70,35 @@ function router(first_route, c, f){
 
 
 
-function newRedirect(url){
-    return function(req,res,args){
-        res.writeHead(302, {'Location': url})
-        res.end()
+/**
+ * Configuration API.
+ */
+router.config = function(options){
+
+    if (options) {
+        // Override default 404 response function.
+        if (_.isFunction(options.send404))
+            send404 = options.send404
+
+        // Add new wild card expressions.
+        if (options.wildcards) {
+            wildcards = _(wildcards).concat(options.wildcards).where(function(obj){
+                return _.isString(obj.tag) && _.isString(obj.exp)
+                // return obj.tag && obj.exp && _.isString(obj.tag) && _.isString(obj.exp)
+            }).value()
+        }
     }
+}
+
+
+// Default failure handler (when no matching route is found). Use config() to override.
+function send404(req, res){
+    res.end('404')
 }
 /**
  * Less abstraction is good for performance. Pass this to your server object;
  * it's the request event listener. It will try to match the requested URL and
- * and invoke the associated controller, or otherwise invoke fail(), which
+ * and invoke the associated controller, or otherwise invoke send404(), which
  * calls req.end('404') as the default. But you can override it using config().
  */
 router.listener = function(req, res){
@@ -129,7 +112,11 @@ router.listener = function(req, res){
             Ω[Ω.length-1] = fn
         },
         redirect: function(url){ // immediately respond with a 302 redirect.
-            redirect = newRedirect(url)
+            res.writeHead(302, {'Location': url})
+            res.end()
+        },
+        send404: function(){
+            send404(req,res)
         }
     }
 
@@ -157,20 +144,46 @@ router.listener = function(req, res){
     }, routes_tree) // <-- This is the object to climb.
 
     // Execute in order, each function stored in the leaf node.
+    i = 0
     if (Ω) {
-        i = 0
-        ;(function next(){
-            if (redirect)
-                redirect(req, res)
+        (function next(){
             if (Ω[i])
                 Ω[i++](req, res, args, ops, next)
             else
-                fail(req, res, args)
+                send404(req, res, args)
         })()
     }
-    else fail(req, res, args)
+    else send404(req, res, args)
 }
 
+
+
+/**
+ * Helpers
+ */
+// Replace predefined keys in a given string, with associated regular expression.
+function toRegExp(string){
+    _(wildcards).each(function(e){
+        string = string.replace(e.tag, e.exp)
+    })
+    
+    return new RegExp(string)
+}
+// A branch is a series of nested objects.
+function newBranch(array, fn){
+    return _.reduce(array.reverse(), function(cumulate, segment){
+        var x = Object.create(null)
+        if (/\{...\}/g.test(segment)) {
+            var re = toRegExp(segment)
+            x['{regex}'] = [re]
+            x[re.toString()] = cumulate
+            return x
+        } else {
+            x[segment] = cumulate
+            return x
+        }
+    }, fn)
+}
 
 
 module.exports = router
