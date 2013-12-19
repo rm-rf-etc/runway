@@ -112,7 +112,7 @@ var myFancy404 = require('fs').fileReadSync('my_fancy_404.html')
 
 router.config({
     send404: function(req,res,args){
-        req.end( myFancy404 )
+        res.end( myFancy404 )
     }
 })
 ```
