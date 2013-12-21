@@ -25,6 +25,17 @@ Runway is built upon lodash-node, the best performance-oriented utility library 
 JsPerf.com is the first place of reference for runtime performance design considerations.
 
 ## Usage:
+
+router is a function having the following arguments convention:  
+`router  ( string url        [, filters],        controller)`  
+`group   ( string base_url   [, default filters] [, default controller])`  
+`grouped route: ( string url [, filters]         [, controller])`  
+* [] = optional argument.  
+* filters = array of functions which accept (request, response, arguments, options, callback).  
+* controller = function which accepts (request, response, arguments).  
+* default = object to use if grouped route does not provide its own.  
+
+
 routes.js
 ```js
 var router = require('../runway')
@@ -96,13 +107,13 @@ server.listen(8080)
 ### Configuration API
 You can add your own wildcard expressions:
 ```js
-// The properties 'tag' and 'exp' must both be strings. Exp must contain
-// a parenthesis group, so the value can be captured during routing.
+// The properties 'key' and 'pattern' must both be strings. Pattern must
+// contain a parenthesis group, so the value can be captured during routing.
 // Use curly brackets around tags since they are not valid URL characters.
 router.config({
     wildcards:[
-        {tag:'{xyz}', exp:'(x|y|z)'    },
-        {tag:'{uid}', exp:'(\d\d\d\d)' }
+        {card:'{xyz}', pattern:'(x|y|z)'    },
+        {card:'{uid}', pattern:'(\d\d\d\d)' }
     ]
 })
 ```

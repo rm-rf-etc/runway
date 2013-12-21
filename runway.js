@@ -3,37 +3,40 @@ var _ = require('lodash-node')
 
 var routes_tree = Object.create(null)
 
+var logger = undefined
 var wildcards = [
-    { tag: '{int}', exp: '([1-9][0-9]*)'    },
-    { tag: '{any}', exp: '([0-9a-zA-Z-_]+)' },
-    { tag: '{a-z}', exp: '([a-zA-Z]+)'      },
-    { tag: '{num}', exp: '([0-9]+)'         }
+    { card: '{int}', pattern: '([1-9][0-9]*)'    },
+    { card: '{any}', pattern: '([0-9a-zA-Z-_]+)' },
+    { card: '{a-z}', pattern: '([a-zA-Z]+)'      },
+    { card: '{num}', pattern: '([0-9]+)'         }
 ]
 
 
 
 /**
  * Although possibly confusing to read, this minimalist set of nested closures
- * is the entire API for adding defining your routes (aside from router.config()).
+ * is the entire API for defining routes (aside from router.config()).
  */
-function router(first_route, c, f){
+function router(){
 
     // c is for controller, f is for filters.
-    function add(url, c, f){
+    function add(url, f, c){
         var Ω, nested
 
-        if (!_.isFunction(c))
-            throw new Error('Route declared ('+url+') but controller specified is not a function.')
+        if (typeof url !== 'string')
+            throw new Error('Router accepts only a string as the first argument.')
 
-        f = _.compact([].concat(f))
-        _.each(f,function(e){
-            if (!_.isFunction(e)) throw new Error('Route declared ('+url+') but filter specified is not a function.')
-        })
+        c = arguments[arguments.length-1]
+        f = (_.isArray(f)) ? f : []
+        if (!_.isFunction(c)) throw new Error('Controller not specified.')
+
         Ω = [].concat(f).concat(c)
 
+        if (logger)
+            logger('add route:', url, 'filters and controller:', Ω)
         // Convert route string into array of path segments.
         url = url.replace(/(^\/|\/$)/g,'').split('/')
-        url = [].concat(url).concat('Ω')
+        url[url.length] = 'Ω'
         nested = newBranch(url, Ω)
 
         // Now include the new route in our routes map object.
@@ -48,28 +51,35 @@ function router(first_route, c, f){
         return add
     }
 
-    add.group = function(base_url, c, f){
-        if (!f) f = (_.isArray(c)) ? c : []
+    add.group = function(base_url, f, c){
+        c = arguments[arguments.length-1]
+        f = (_.isArray(f)) ? f : undefined
+        c = (_.isFunction(c)) ? c : undefined
+
         base_url = base_url.replace(/(^\/|\/$)/g,'')
 
-        function sub_route(new_sub_route, c2, f2){
+        function sub_route(new_sub_route, f2, c2){
             new_sub_route = new_sub_route.replace(/(^\/|\/$)/g,'')
-            
-            c2 = (c2) ? c2 : c
-            f2 = (f2) ? f.concat(f2) : f
 
-            add(base_url+'/'+new_sub_route, c2, f2)
+            c2 = arguments[arguments.length-1]
+            c2 = (_.isFunction(c2)) ? c2 : c
+            f2 = (_.isArray(f2)) ? f2 : f
+
+            if (!c2)
+                throw new Error('Controller not specified.')
+            if (f2)
+                add.apply(null, [base_url+'/'+new_sub_route, f2, c2])
+            else
+                add.apply(null, [base_url+'/'+new_sub_route, c2])
+
             return sub_route
         }
         sub_route.endgroup = add
         return sub_route
     }
 
-    return add(first_route, c, f)
+    return add.apply(null, arguments)
 }
-
-
-
 /**
  * Configuration API.
  */
@@ -77,28 +87,33 @@ router.config = function(options){
 
     if (options) {
         // Override default 404 response function.
-        if (_.isFunction(options.send404))
-            send404 = options.send404
+        if (options.error && _.isFunction(options.error))
+            sendError = options.error
+
+        // Provide a callback to use for logging. Change to null/false/undefined to disable.
+        if (options.logger && _.isFunction(options.logger))
+            logger = options.logger
 
         // Add new wild card expressions.
-        if (options.wildcards) {
+        if (options.wildcards && _.isArray(options.wildcards)) {
             wildcards = _(wildcards).concat(options.wildcards).where(function(obj){
-                return _.isString(obj.tag) && _.isString(obj.exp)
-                // return obj.tag && obj.exp && _.isString(obj.tag) && _.isString(obj.exp)
+                return obj.card && obj.pattern && _.isString(obj.card) && _.isString(obj.pattern)
             }).value()
         }
     }
+
+    return router
 }
 
 
 // Default failure handler (when no matching route is found). Use config() to override.
-function send404(req, res){
-    res.end('404')
+function sendError(code, req, res, args, ops){
+    res.end(code)
 }
 /**
  * Less abstraction is good for performance. Pass this to your server object;
  * it's the request event listener. It will try to match the requested URL and
- * and invoke the associated controller, or otherwise invoke send404(), which
+ * and invoke the associated controller, or otherwise invoke error(), which
  * calls req.end('404') as the default. But you can override it using config().
  */
 router.listener = function(req, res){
@@ -115,8 +130,8 @@ router.listener = function(req, res){
             res.writeHead(302, {'Location': url})
             res.end()
         },
-        send404: function(){
-            send404(req,res)
+        error: function(code){
+            sendError(code,req,res)
         }
     }
 
@@ -124,7 +139,7 @@ router.listener = function(req, res){
     route = req.url.slice(1).replace(/\/$/g,'').split('?')[0].split('/')
     route[route.length] = 'Ω'
 
-    // Climb the routes map, always check first for a matching static route segment.
+    // Climb the routes map, always check first for a matching static route segment before trying regex.
     Ω =  _.reduce(route, function(obj, seg){
         if (!obj) return
 
@@ -143,17 +158,17 @@ router.listener = function(req, res){
         }
     }, routes_tree) // <-- This is the object to climb.
 
-    // Execute in order, each function stored in the leaf node.
     i = 0
     if (Ω) {
+        // Execute in order, each function stored in the leaf node. (note: Ω[i++] != Ω[++i])
         (function next(){
             if (Ω[i])
                 Ω[i++](req, res, args, ops, next)
             else
-                send404(req, res, args)
+                sendError('404', req, res, args, ops)
         })()
     }
-    else send404(req, res, args)
+    else sendError('404', req, res, args, ops)
 }
 
 
@@ -161,10 +176,10 @@ router.listener = function(req, res){
 /**
  * Helpers
  */
-// Replace predefined keys in a given string, with associated regular expression.
+// Swap keys for values in a given string and return as a regular expression.
 function toRegExp(string){
     _(wildcards).each(function(e){
-        string = string.replace(e.tag, e.exp)
+        string = string.replace(e.card, e.pattern)
     })
     
     return new RegExp(string)
@@ -186,5 +201,7 @@ function newBranch(array, fn){
 }
 
 
-module.exports = router
 
+/**
+ */
+module.exports = router
