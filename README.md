@@ -26,10 +26,12 @@ JsPerf.com is the first place of reference for runtime performance design consid
 
 ## Usage:
 
-router is a function having the following arguments convention:  
-`router  ( string url        [, filters],        controller             )`  
-`group   ( string base_url   [, default filters] [, default controller] )`  
-`grouped route: ( string url [, filters]         [, controller]         )`  
+router is a function having the following arguments convention:
+```
+router  ( string url        [, filters],        controller             )
+group   ( string base_url   [, default filters] [, default controller] )
+grouped route: ( string url [, filters]         [, controller]         )
+```
 * [] = optional argument.  
 * filters = array of functions which accept (request, response, arguments, methods, callback). A filter must invokde callback(), or method.error(code), or method.redirect(url).  
 * controller = function which accepts (request, response, arguments, methods).  
