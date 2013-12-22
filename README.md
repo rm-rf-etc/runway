@@ -182,18 +182,18 @@ your controller. Otherwise they are identical. As such, you can easily reuse fil
 logic across large groups of routes, easily defining how to intercept incoming data
 and how to modify it before finally invoking the controller.
 
-_filter convention:_
-`function (request, response, arguments, routing, next) { /* logic */ }`
+_filter convention:_  
+`function (request, response, arguments, routing, next) { /* logic */ }`  
 Request and response you will recognize from all your regular node HTTP request
 listeners.  
 * Arguments is an array of values parsed from the URL, one for each wildcard you used.
 * Routing is an object containing callbacks for redirecting or responding with an
-error page:
+error page:  
 ```
 routing.i_redirect(controller) // Route instead to controller.
 routing.redirect(url) // Send a 302 response with url as the destination.
 routing.error(code) // Call res.end(code). This feature will be improved soon.
-```
+```  
 * Next is a callback, invoke this to continue on to the next filter or the controller.
 
 A filter must invoke either next(), routing.redirect(), or routing.error(). Otherwise
