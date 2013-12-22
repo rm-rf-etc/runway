@@ -189,7 +189,8 @@ listeners.
 * Arguments is an array of values parsed from the URL, one for each wildcard you used.
 * Routing is an object containing callbacks for redirecting or responding with an
 error page:  
-```js
+
+```
 routing.i_redirect(controller) // Route instead to controller.
 routing.redirect(url) // Send a 302 response with url as the destination.
 routing.error(code) // Call res.end(code). This feature will be improved soon.
