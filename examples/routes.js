@@ -37,8 +37,8 @@ function hasAuth(i,o,a,r,next){
     next()
 }
 // This is one way to restrict protocol types.
-function GET(i,o,a,r,next){ (i.method !== 'GET') ? r.send404() : next() }
-function POST(i,o,a,r,next){ (i.method !== 'POST') ? r.send404() : next() }
+function GET(i,o,a,r,next){ (i.method !== 'GET') ? r.error('404') : next() }
+function POST(i,o,a,r,next){ (i.method !== 'POST') ? r.error('404') : next() }
 
 /**
  * Routes
