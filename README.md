@@ -157,10 +157,10 @@ route filters.
 Default wildcard patterns:  
 ```js
 var wildcards = [
-    { tag: '{int}', exp: '([1-9][0-9]*)'    },
-    { tag: '{any}', exp: '([0-9a-zA-Z-_]+)' },
-    { tag: '{a-z}', exp: '([a-zA-Z]+)'      },
-    { tag: '{num}', exp: '([0-9]+)'         }
+    { card: '{int}', pattern: '([1-9][0-9]*)'    },
+    { card: '{any}', pattern: '([0-9a-zA-Z-_]+)' },
+    { card: '{a-z}', pattern: '([a-zA-Z]+)'      },
+    { card: '{num}', pattern: '([0-9]+)'         }
 ]
 ```
 
@@ -173,12 +173,33 @@ expressions.
 Router.listener is your main node request listener. When a request event fires,
 listener() climbs the tree until it reaches the end of the path and finds a leaf
 node. A leaf node is an array of functions, where the last function is the controller
-you provided. Each function before that is a route filter, which receives all the
-same arguments as the controller, and so has access to modify any of the data in
-those objects, before the controller is invoked. The ops object also provides utility
-features, such as i_redirect() and redirect(). i_redirect() allows you to change the
-controller, while redirect() sends an actual 302 response with whatever destination
-you provide.
+you provided. If a leaf node is not found, the default 404 method is called, which
+will send the reply, ending the current request.
+
+### Using Filters:
+Each function in the leaf node array is a filter, except the last one, which is
+your controller. Otherwise they are identical. As such, you can easily reuse filtering
+logic across large groups of routes, easily defining how to intercept incoming data
+and how to modify it before finally invoking the controller.
+
+_filter convention:_
+`function (request, response, arguments, routing, next) { /* logic */ }`
+Request and response you will recognize from all your regular node HTTP request
+listeners.  
+* Arguments is an array of values parsed from the URL, one for each wildcard you used.
+* Routing is an object containing callbacks for redirecting or responding with an
+error page:
+```
+routing.i_redirect(controller) // Route instead to controller.
+routing.redirect(url) // Send a 302 response with url as the destination.
+routing.error(code) // Call res.end(code). This feature will be improved soon.
+```
+* Next is a callback, invoke this to continue on to the next filter or the controller.
+
+A filter must invoke either next(), routing.redirect(), or routing.error(). Otherwise
+If next() is not invoked, the routing process will not continue through the filters,
+on to the controller, and likely no response will be sent back, leaving the client
+hanging.
 
 ## How To Run The Tests
 ```
