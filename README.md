@@ -38,7 +38,7 @@ router is a function having the following arguments convention:
 
 _routes.js_
 ```js
-// find this code on github.
+// find this code under examples/ in the github repo.
 var router = require('../runway')
 
 /**
@@ -126,11 +126,13 @@ router.config({
 
 Provide your own 404 response:
 ```js
-var myFancy404 = require('fs').fileReadSync('my_fancy_404.html')
+var handlebars = require('handlebars')
+var tpl = require('fs').fileReadSync('fancy_errors_template.html')
+var myFancyError = handlebars.compile(tpl)
 
 router.config({
-    send404: function(req,res,args){
-        res.end( myFancy404 )
+    send404: function(code,req,res,args){
+        res.end( myFancyError(code) )
     }
 })
 ```
