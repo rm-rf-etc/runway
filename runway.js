@@ -28,7 +28,8 @@ function router(){
 
         c = arguments[arguments.length-1]
         f = (_.isArray(f)) ? f : []
-        if (!_.isFunction(c)) throw new Error('Controller not specified.')
+        if (!_.isFunction(c)) throw new Error('Controller either not specified or invalid.')
+        _.each(f,function(e){ if (!_.isFunction(e)) throw new Error('Filter is not a function: '+{}.toString.apply(e)) })
 
         Ω = [].concat(f).concat(c)
 
@@ -176,7 +177,7 @@ router.listener = function(req, res){
 /**
  * Helpers
  */
-// Swap keys for values in a given string and return as a regular expression.
+// Swap keys for values in a given string and return it as a regular expression.
 function toRegExp(string){
     _(wildcards).each(function(e){
         string = string.replace(e.card, e.pattern)
