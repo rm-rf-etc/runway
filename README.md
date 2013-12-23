@@ -133,7 +133,7 @@ var tpl = require('fs').fileReadSync('fancy_errors_template.html')
 var myFancyError = handlebars.compile(tpl)
 
 router.config({
-    send404: function(code,req,res,args){
+    error: function(code,i,o,a){
         res.end( myFancyError(code) )
     }
 })

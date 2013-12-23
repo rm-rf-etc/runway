@@ -28,8 +28,11 @@ function router(){
 
         c = arguments[arguments.length-1]
         f = (_.isArray(f)) ? f : []
+        
         if (!_.isFunction(c)) throw new Error('Controller either not specified or invalid.')
-        _.each(f,function(e){ if (!_.isFunction(e)) throw new Error('Filter is not a function: '+{}.toString.apply(e)) })
+        _.each(f,function(e){
+            if (!_.isFunction(e)) throw new Error('Filter is not a function: '+{}.toString.apply(e))
+        })
 
         Ω = [].concat(f).concat(c)
 
