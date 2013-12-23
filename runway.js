@@ -19,6 +19,10 @@ var wildcards = [
  */
 function router(){
 
+    add.group = group
+    add.config = config
+    add.group.config = config
+
     // c is for controller, f is for filters.
     function add(url, f, c){
         var Ω, nested
@@ -28,7 +32,7 @@ function router(){
 
         c = arguments[arguments.length-1]
         f = (_.isArray(f)) ? f : []
-        
+
         if (!_.isFunction(c)) throw new Error('Controller either not specified or invalid.')
         _.each(f,function(e){
             if (!_.isFunction(e)) throw new Error('Filter is not a function: '+{}.toString.apply(e))
@@ -55,7 +59,7 @@ function router(){
         return add
     }
 
-    add.group = function(base_url, f, c){
+    function group(base_url, f, c){
         c = arguments[arguments.length-1]
         f = (_.isArray(f)) ? f : undefined
         c = (_.isFunction(c)) ? c : undefined
@@ -79,17 +83,20 @@ function router(){
             return sub_route
         }
         sub_route.endgroup = add
-        sub_route.group = add.group
+        sub_route.group = group
+        sub_route.config = config
         
         return sub_route
     }
 
     return add.apply(null, arguments)
 }
+router.config = config
+
 /**
  * Configuration API.
  */
-router.config = function(options){
+function config(options){
 
     if (options) {
         // Override default 404 response function.
@@ -164,12 +171,13 @@ router.listener = function(req, res){
         }
     }, routes_tree) // <-- This is the object to climb.
 
-    i = 0
+    i = -1
     if (Ω) {
         // Execute in order, each function stored in the leaf node. (note: Ω[i++] != Ω[++i])
         (function next(){
+            i++
             if (Ω[i])
-                Ω[i++](req, res, args, ops, next)
+                Ω[i](req, res, args, ops, next)
             else
                 sendError('404', req, res, args, ops)
         })()
