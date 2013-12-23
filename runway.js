@@ -76,9 +76,10 @@ function router(){
             return sub_route
         }
         sub_route.endgroup = add
+        sub_route.group = add.group
+        
         return sub_route
     }
-    add.group.group = add.group
 
     return add.apply(null, arguments)
 }
