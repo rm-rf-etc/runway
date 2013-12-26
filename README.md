@@ -30,7 +30,7 @@ router is a function having the following arguments convention:
 ```
 router  ( string url        [, filters],        controller             )
 group   ( string base_url   [, default filters] [, default controller] )
-grouped route: ( string url [, filters]         [, controller]         )
+grouped route  ( string url [, filters]         [, controller]         )
 ```
 * [] = optional argument.  
 * filters = array of functions which accept (request, response, arguments, methods, callback). A filter must invokde callback(), or method.error(code), or method.redirect(url).  
