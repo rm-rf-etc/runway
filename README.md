@@ -101,7 +101,7 @@ router.config( {logger: console.log} )
     ( '/moderator/edit/{any}/' )
 .endgroup
 
-( 'more/', function(req,res){ res.end('more') } )
+( 'more/', function(i,o){ o.end('more') } )
 ```
 
 _basic.js_
@@ -135,7 +135,7 @@ var myFancyError = handlebars.compile(tpl)
 
 router.config({
     error: function(code,i,o,a){
-        res.end( myFancyError(code) )
+        o.end( myFancyError(code) )
     }
 })
 ```
@@ -194,7 +194,7 @@ error page:
 ```
 routing.i_redirect(controller) // Route instead to controller.
 routing.redirect(url) // Send a 302 response with url as the destination.
-routing.error(code) // Call res.end(code). This feature will be improved soon.
+routing.error(code) // Invokes default or configured function.
 ```  
 * Next is a callback, invoke this to continue on to the next filter or the controller.
 
