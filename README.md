@@ -135,7 +135,7 @@ var myFancyError = handlebars.compile(tpl)
 
 router.config({
     error: function(code,i,o,a){
-        o.end( myFancyError(code) )
+        o.end( myFancyError({code:code}) )
     }
 })
 ```
