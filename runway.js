@@ -124,9 +124,19 @@ function config(options){
         // Override default favicon request handler.
         if (options.favicon && _.isString(options.favicon) && require.resolve(options.favicon)) {
             bytes = require('fs').readFileSync( options.favicon ).toJSON()
+            hash = require('crypto').createHash('md5')
             _.each(bytes, function(e){
                 hash.update(e.toString())
             })
+            icon = {
+                body: new Buffer( bytes ),
+                headers: {
+                    'Content-Type': 'image/x-icon'
+                ,   'Content-Length': bytes.length
+                ,   'ETag': '"' + hash.digest() + '"'
+                ,   'Cache-Control': 'public, max-age=' + 86400
+                }
+            }
         }
 
         // Add new wild card expressions.
@@ -147,7 +157,7 @@ function sendError(code, req, res, args, ops){
 }
 // Default failure handler (when no matching route is found). Use config() to override.
 function favicon(req, res, args, ops){
-    res.writeHead( icon.headers )
+    res.writeHead( 200, icon.headers )
     res.end( icon.body )
 }
 /**
