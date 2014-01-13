@@ -131,7 +131,7 @@ Provide your own 404 response:
 ```js
 var handlebars = require('handlebars')
 var tpl = require('fs').fileReadSync('fancy_errors_template.html')
-var myFancyError = handlebars.compile(tpl)
+var myFancyError = handlebars.compile(tpl.toString())
 
 router.config({
     error: function(code,i,o,a){
