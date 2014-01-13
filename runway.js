@@ -162,6 +162,9 @@ router.listener = function(req, res){
     args = []
     n = 0
 
+    if (req.url === '/favicon.ico')
+        return favicon(req,res)
+
     ops = {
         i_redirect: function(fn){ // replace the controller with a different one.
             Ω[Ω.length-1] = fn
@@ -183,9 +186,6 @@ router.listener = function(req, res){
     Ω =  _.reduce(route, function(obj, seg){
         if (!obj)
             return
-
-        if (seg === 'favicon.ico')
-            return favicon(req,res)
 
         norm = obj[seg] || undefined
         if (norm)
