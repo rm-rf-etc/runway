@@ -1,8 +1,22 @@
 
-var _ = require('lodash-node')
+/*!
+ * Runway Router
+ * Copyright(c) 2014 Rob Christian
+ * MIT Licensed
+ */
 
+
+/**
+ * Dependencies
+ */
+var _ = require('lodash-node')
+var fs = require('fs')
+
+/**
+ * Runway private data
+ */
 var hash = require('crypto').createHash('md5')
-var bytes = require('favicon.json')
+var bytes = fs.readFileSync(__dirname+'/encore.ico').toJSON()
 _.each(bytes, function(e){
     hash.update(e.toString())
 })
@@ -15,7 +29,6 @@ var icon = {
     ,   'Cache-Control': 'public, max-age=' + 86400
     }
 }
-
 var routes_tree = Object.create(null)
 var logger = undefined
 var wildcards = [
@@ -28,8 +41,7 @@ var wildcards = [
 
 
 /**
- * Although possibly confusing to read, this minimalist set of nested closures
- * is the entire API for defining routes (aside from router.config()).
+ * The router API.
  */
 function router(){
 
@@ -54,7 +66,7 @@ function router(){
 
         Ω = [].concat(f).concat(c)
 
-        if (logger)
+        if (logger && _.isFunction(logger))
             logger('add route:', url, 'filters and controller:', Ω)
         // Convert route string into array of path segments.
         url = url.replace(/(^\/|\/$)/g,'').split('/')
@@ -107,48 +119,63 @@ function router(){
 }
 router.config = config
 
+
+
 /**
  * Configuration API.
  */
-function config(options){
+function config(name, obj){
 
-    if (options) {
-        // Override default 404 response function.
-        if (options.error && _.isFunction(options.error))
-            sendError = options.error
+    if (_.isString(name)) {
 
-        // Provide a callback to use for logging. Change to null/false/undefined to disable.
-        if (options.logger && _.isFunction(options.logger))
-            logger = options.logger
+        switch (name) {
 
-        // Override default favicon request handler.
-        if (options.favicon && _.isString(options.favicon) && require.resolve(options.favicon)) {
-            bytes = require('fs').readFileSync( options.favicon ).toJSON()
-            hash = require('crypto').createHash('md5')
-            _.each(bytes, function(e){
-                hash.update(e.toString())
-            })
-            icon = {
-                body: new Buffer( bytes ),
-                headers: {
-                    'Content-Type': 'image/x-icon'
-                ,   'Content-Length': bytes.length
-                ,   'ETag': '"' + hash.digest() + '"'
-                ,   'Cache-Control': 'public, max-age=' + 86400
+        case 'error':
+            // Override default 404 response function.
+            if (_.isFunction(obj)) sendError = obj
+            break
+
+        case 'logger':
+        case 'logging':
+            // Provide a callback to use for logging. Change to null/false/undefined to disable.
+            if (_.isFunction(obj)) logger = obj
+            break
+
+        case 'favicon':
+            // Override default favicon request handler.
+            if (_.isString(obj) && require.resolve(obj)) {
+                bytes = fs.readFileSync( obj ).toJSON()
+                hash = require('crypto').createHash('md5')
+                _.each(bytes, function(e){
+                    hash.update(e.toString())
+                })
+                icon = {
+                    body: new Buffer( bytes ),
+                    headers: {
+                        'Content-Type': 'image/x-icon'
+                    ,   'Content-Length': bytes.length
+                    ,   'ETag': '"' + hash.digest() + '"'
+                    ,   'Cache-Control': 'public, max-age=' + 86400
+                    }
                 }
             }
-        }
+            break
 
-        // Add new wild card expressions.
-        if (options.wildcards && _.isArray(options.wildcards)) {
-            wildcards = _(wildcards).concat(options.wildcards).where(function(obj){
-                return obj.card && obj.pattern && _.isString(obj.card) && _.isString(obj.pattern)
-            }).value()
+        case 'wildcard':
+        case 'wildcards':
+            // Add new wild card expressions.
+            if (_.isArray(obj)) {
+                wildcards = _(wildcards).concat(obj).where(function(obj){
+                    return obj.card && obj.pattern && _.isString(obj.card) && _.isString(obj.pattern)
+                }).value()
+            }
+            break
         }
     }
 
     return router
 }
+
 
 
 // Default failure handler (when no matching route is found). Use config() to override.
@@ -161,10 +188,10 @@ function favicon(req, res, args, ops){
     res.end( icon.body )
 }
 /**
- * Less abstraction is good for performance. Pass this to your server object;
- * it's the request event listener. It will try to match the requested URL and
- * and invoke the associated controller, or otherwise invoke error(), which
- * calls req.end('404') as the default. But you can override it using config().
+ * This is the node HTTP request listener. It will try to match the requested URL
+ * and invoke the associated controller, or otherwise invoke error(), which calls
+ * req.end('404') as the default. But you can override the error handler using
+ * config().
  */
 router.listener = function(req, res){
 

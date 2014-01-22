@@ -41,76 +41,33 @@ grouped route  ( string url [, filters]         [, controller]         )
 
 _routes.js_
 ```js
-// find this code under examples/ in the github repo.
-var router = require('../runway')
-
-/**
- * Controllers
- */
-// i = input, o = output, a = args, r = router-provided methods
-var controllers = {}
-controllers.index = function(i,o,a,r){ o.end('index') }
-controllers.users = function(i,o,a,r){ o.end('users') }
-controllers.home  = function(i,o,a,r){ o.end('home')  }
-controllers.basic = function(i,o,a,r){ o.end('default. args: '+a) }
-
-// This is probably the simplest approach to RESTful resource controllers in JS.
-controllers.myResource = function(i,o,a,r){
-    var fn = controllers.myResource[i.method.toLowerCase()]
-    if (fn)
-        fn(i,o,a,r)
-    else
-        r.error('404')
-}
-controllers.myResource.get = function(i,o,a,r){ o.end('get received') }
-controllers.myResource.post = function(i,o,a,r){ o.end('post received') }
-controllers.myResource.put = function(i,o,a,r){ o.end('put received') }
-controllers.myResource.delete = function(i,o,a,r){ o.end('delete received') }
-
-/**
- * Filters
- */
-function isMobile(i,o,a,r,next){
-    if (/mobile/g.test(i['user-agent']))
-        r.i_redirect(controllers.index)
-    next()
-}
-function hasAuth(i,o,a,r,next){
-    // auth logic goes here...
-    next()
-}
-// This is one way to restrict protocol types.
-function GET(i,o,a,r,next){ (i.method !== 'GET') ? r.error('404') : next() }
-function POST(i,o,a,r,next){ (i.method !== 'POST') ? r.error('404') : next() }
-
-/**
- * Routes
- */
-router.config( {logger: console.log} )
-
-( '/', controllers.index )
-( 'home/', controllers.home )
-( 'home/users/{int}/', [GET], controllers.users )
-//      route filters    ^
-
-// This is to show how groups behave.
-.group( '/api/v1/', [isMobile, hasAuth], controllers.basic )
-    ( '/user/edit/{any}/', [GET] ) // <--this filter overrides those that were provided in the group declaration.
-    ( '/user/update/{any}/', [POST], controllers.users )
-    ( '/admin/edit/{any}/', controllers.myResource )
-    ( '/moderator/edit/{any}/' )
-.endgroup
-
-( 'more/', function(i,o){ o.end('more') } )
-```
-
-_basic.js_
-```js
-require('./routes.js')
 var router = require('runway')
-var server = require('http').createServer(router.listener)
-server.listen(8080)
+
+router
+.config('favicon', __dirname+'/favicon.ico')
+.config('error', function(code, req, res){ res.end( 'error: '+code ) })
+
+// Routes
+('/', index)
+('/a', one)
+('/b', one)
+('/c', one)
+.group('/z')
+    ('/a', two)
+    ('/b', two)
+    ('/c', two)
+.endgroup
+('/d', one)
+('/e', one)
+
+
+function index(i,o,a,r){ o.end('hello world') }
+function one(i,o,a,r){ o.end('one') }
+function two(i,o,a,r){ o.end('two') }
+
+require('http').createServer(router.listener).listen(8080)
 ```
+
 
 ### Configuration API
 You can add your own wildcard expressions:
@@ -119,13 +76,13 @@ You can add your own wildcard expressions:
 // a parenthesis group, so the value can be captured during routing. Use curly braces
 // around cards since they're invalid URL characters, you will never receive a request
 // containing the same pattern as your wildcard's name.
-router.config({
-    wildcards:[
+router.config('wildcards', [
         {card:'{xyz}', pattern:'(x|y|z)'    },
         {card:'{uid}', pattern:'(\d\d\d\d)' }
     ]
-})
+)
 ```
+
 
 Provide your own 404 response:
 ```js
@@ -133,18 +90,22 @@ var handlebars = require('handlebars')
 var tpl = require('fs').fileReadSync('fancy_errors_template.html')
 var myFancyError = handlebars.compile(tpl.toString())
 
-router.config({
-    error: function(code,i,o,a){
-        o.end( myFancyError({code:code}) )
-    }
-})
+router.config('error', function(code, req, res){ res.end(code) })
 ```
+
+
+Use your own logging method:
+```js
+router.config('logger', yourLoggerFunction)
+```
+
 
 ## Description
 Runway.js, a router module for node.js. It is a minimalist, tree structure,
 performance-oriented solution, intended to support large projects with many routes.
 
 The syntax is designed to be simplistic, uncluttered, and feature-rich.
+
 
 ## Features
 * Route to any standard request event listener (any function which receives request
@@ -154,6 +115,7 @@ route filters.
 * router.config() provides functionality extension.  
 * Override the default 404 handler.  
 * Add your own wildcard expressions.  
+* Provide your own favicon.  
 
 Default wildcard patterns:  
 ```js
@@ -177,6 +139,7 @@ node. A leaf node is an array of functions, where the last function is the contr
 you provided. If a leaf node is not found, the default 404 method is called, which
 will send the reply, ending the current request.
 
+
 ### Using Filters:
 Each function in the leaf node array is a filter, except the last one, which is
 your controller. Otherwise they are identical. As such, you can easily reuse filtering
@@ -184,24 +147,25 @@ logic across large groups of routes, easily defining how to intercept incoming d
 and how to modify it before finally invoking the controller.
 
 _filter convention:_  
-`function (request, response, arguments, routing, next) { /* logic */ }`  
+
+`function (request, response, arguments, methods, next) { /* logic */ }`  
 Request and response you will recognize from all your regular node HTTP request
 listeners.  
 
 * Arguments is an array of values parsed from the URL, one for each wildcard you used.  
-* Routing is an object containing callbacks for redirecting or responding with an error page:  
+* Methods is an object containing callbacks for redirecting or responding with an error page:  
 
 ```
-routing.i_redirect(controller) // Route instead to controller.
-routing.redirect(url) // Send a 302 response with url as the destination.
-routing.error(code) // Invokes default or configured function.
+methods.i_redirect(controller) // Internal redirect.
+methods.redirect(url) // Send a 302 response with url as the destination.
+methods.error(code) // Invokes default or configured error handler.
 ```  
 
 * Next is a callback, invoke this to continue on to the next filter or the controller.
 
-A filter must invoke either next(), routing.redirect(), or routing.error(). Otherwise
-If next() is not invoked, the routing process will not continue through the filters,
-on to the controller, and likely no response will be sent back, leaving the client
+A filter must invoke either next(), methods.redirect(), or methods.error(). Otherwise,
+if next() is not called, the routing process will not continue through the filters and
+on to the controller, likely no response will be sent back, and the client will be left
 hanging.
 
 ## How To Run The Tests
