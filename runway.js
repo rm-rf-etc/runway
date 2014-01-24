@@ -32,10 +32,10 @@ var icon = {
 var routes_tree = Object.create(null)
 var logger = undefined
 var wildcards = [
-    { card: '{int}', pattern: '([1-9][0-9]*)'    },
-    { card: '{any}', pattern: '([0-9a-zA-Z-_]+)' },
-    { card: '{a-z}', pattern: '([a-zA-Z]+)'      },
-    { card: '{num}', pattern: '([0-9]+)'         }
+    { card: '{int}', pattern: '([1-9][0-9]*)'     },
+    { card: '{any}', pattern: '([0-9a-zA-Z-_.]+)' },
+    { card: '{a-z}', pattern: '([a-zA-Z]+)'       },
+    { card: '{num}', pattern: '([0-9]+)'          }
 ]
 
 
