@@ -23,19 +23,37 @@ runway.bind('route added',function(){
 
 module.exports = runway
 
+runway.hijackAnchors = function(hijack) {
+	if (hijack) {
+		document.onclick = function(event) {
+			event = event || window.event // IE specials
+			event.preventDefault()
+			var target = event.target || event.srcElement // IE specials
 
+			if (target.tagName == 'A' || target.tagName == 'BUTTON') {
+				processLink(target.href, target.dataset.ajax)
+			}
+		}
+	}
+	else {
+		document.onclick = function(event) {
+			event = event || window.event // IE specials
+			var target = event.target || event.srcElement // IE specials
 
-var onclick_els = ['A','BUTTON']
-
-document.onclick = function(event) {
-	event = event || window.event // IE specials
-	var target = event.target || event.srcElement // IE specials
-
-	if (onclick_els.indexOf(target.tagName) !== -1 && target.href) {
-		event.preventDefault()
-		processLink(target.href, target.dataset.ajax)
+			if (target.tagName == 'BUTTON') {
+				processLink(target.href, target.dataset.ajax)
+			}
+		}
 	}
 }
+
+window.onpopstate = function(event){ doRoute(event.state.url) }
+function init(){
+	history.replaceState( {url:location.pathname}, null, location.pathname )
+}
+window.addEventListener ? addEventListener('load', init, false) : window.attachEvent ? attachEvent('onload', init) : (onload = init)
+
+
 
 function processLink(href, ajax){
 	console.log('processLink', href)
@@ -58,10 +76,3 @@ function goForward(url){
 	else location.assign(url)
 }
 
-window.onpopstate = function(event){ doRoute(event.state.url) }
-
-function init(){
-	history.replaceState( {url:location.pathname}, null, location.pathname )
-}
-
-window.addEventListener ? addEventListener('load', init, false) : window.attachEvent ? attachEvent('onload', init) : (onload = init)
