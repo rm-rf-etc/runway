@@ -3,11 +3,9 @@
   "version": "3.15.47-beta",
   "description": "Stupidly simple, performance-oriented router module for node.js apps.",
   "main": "runway.js",
-  "bundledDependencies": [
-    "favicon.json"
-  ],
   "dependencies": {
-    "lodash-node": "~2.4.1"
+    "lodash": "4.0.0",
+    "microevent": "^1.0.0"
   },
   "devDependencies": {},
   "scripts": {

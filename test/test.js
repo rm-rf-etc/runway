@@ -1,5 +1,5 @@
 
-var _ = require('lodash-node')
+var _ = require('lodash')
 var util = require('util')
 var router = require('../runway')
 
