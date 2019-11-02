@@ -4,7 +4,7 @@
   "description": "Stupidly simple, performance-oriented router module for node.js apps.",
   "main": "runway.js",
   "dependencies": {
-    "lodash": "4.0.0",
+    "lodash": "4.17.15",
     "microevent": "^1.0.0"
   },
   "devDependencies": {},
